@@ -1,0 +1,10 @@
+[Unit]
+Description=PBS rclone nightly sync timer
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

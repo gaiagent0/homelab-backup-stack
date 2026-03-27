@@ -1,0 +1,10 @@
+[Unit]
+Description=PBS rclone sync to offsite storage
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pbs-backup-sync.sh
+StandardOutput=journal
+StandardError=journal
