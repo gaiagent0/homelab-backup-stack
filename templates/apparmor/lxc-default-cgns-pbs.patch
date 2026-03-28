@@ -1,0 +1,13 @@
+# AppArmor LXC patch for PBS bind-mount paths
+# Apply on pve-02 host to lxc-default-cgns profile
+# 
+# Usage:
+#   head -n -1 /etc/apparmor.d/lxc/lxc-default-cgns > /tmp/aa.tmp
+#   cat lxc-default-cgns-pbs.patch >> /tmp/aa.tmp
+#   mv /tmp/aa.tmp /etc/apparmor.d/lxc/lxc-default-cgns
+#   apparmor_parser -r /etc/apparmor.d/lxc-containers
+
+  # PBS store bind mounts
+  mount options=(rw, rbind) /mnt/pbs-store/ -> /var/lib/proxmox-backup/backups/,
+  mount options=(ro, rbind) /mnt/pbs-store/ -> /mnt/pbs-backup/,
+}
