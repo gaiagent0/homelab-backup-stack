@@ -1,8 +1,8 @@
-#!/bin/bash
+﻿#!/bin/bash
 # ============================================================
 # pbs-backup-sync.sh — PBS → rclone offsite sync
 # Runs inside CT204 (rclone-sync LXC) via systemd timer.
-# Source: https://github.com/YOUR_USER/homelab-backup-stack
+# Source: https://github.com/gaiagent0/homelab-backup-stack
 # ============================================================
 
 set -uo pipefail
