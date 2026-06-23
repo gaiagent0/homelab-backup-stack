@@ -1,5 +1,5 @@
 # PBS CT Újratelepítés Runbook
-*Utolsó frissítés: 2026-06-22 — valós incidens alapján*
+*Utolsó frissítés: 2026-06-23 — valós incidens alapján*
 
 ## Probléma
 A PBS CT (CT201, pbs-server, pve-02) nem indul el mert a root filesystem (local storage) megtelt, és a disk fájl törlődött vagy megsérült.
@@ -91,8 +91,17 @@ pct restart 201
 Ez a legkritikusabb lépés — ezek nélkül nem lehet bejelentkezni a web UI-ra.
 
 ### Root jelszó beállítása
+
+**KRITIKUS:** Használd a `chpasswd`-t, NE a `passwd`-t! A `passwd` interaktív és nem mindig frissíti rendesen a PAM jelszót a CT-n belül.
+
 ```bash
-pct exec 201 -- passwd root
+pct exec 201 -- bash -c "echo 'root:UJJELSZÓ' | chpasswd && echo OK"
+```
+
+Ha `authentication error - SUCCESS (0)` hibát kapsz a web UI-ban, töröld a shadow.json-t és állítsd be újra `chpasswd`-val:
+```bash
+pct exec 201 -- bash -c "rm -f /etc/proxmox-backup/shadow.json && echo 'root:UJJELSZÓ' | chpasswd && echo OK"
+pct exec 201 -- systemctl restart proxmox-backup
 ```
 
 ### user.cfg létrehozása (helyes formátum!)
@@ -136,7 +145,7 @@ systemctl restart proxmox-backup
 URL: `https://10.10.40.14:8007`
 - **Username:** `root`
 - **Realm:** Linux PAM standard authentication
-- **Jelszó:** amit a `passwd root`-tal beállítottál
+- **Jelszó:** amit a `chpasswd`-val beállítottál
 
 **Hibák és megoldásuk:**
 
@@ -145,7 +154,7 @@ URL: `https://10.10.40.14:8007`
 | `user account disabled or expired` | user.cfg hiányzik vagy hibás | user.cfg újraírása `enable 1`-gyel |
 | `Permission denied (os error 13)` | rossz ownership | `chown root:backup` |
 | `wrong number of items` | hibás acl.cfg formátum | `acl:1:/:root@pam:Admin` (5 mező, kettőspont elválasztó) |
-| `authentication error - SUCCESS (0)` | PAM OK de acl.cfg hiányzik | acl.cfg létrehozása |
+| `authentication error - SUCCESS (0)` | shadow.json ütközés | `rm /etc/proxmox-backup/shadow.json` + `chpasswd` |
 | `root@pam@pam` | dupla realm a UI-ban | Username mezőbe csak `root`, Realm legördülőből PAM |
 
 ---
