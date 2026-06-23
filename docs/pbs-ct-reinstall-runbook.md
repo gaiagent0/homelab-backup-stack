@@ -109,18 +109,25 @@ pct exec 201 -- bash -c "printf 'user: root@pam\n\tenable 1\n\tcomment Superuser
 pct exec 201 -- bash -c "echo 'acl:1:/:root@pam:Admin' > /etc/proxmox-backup/acl.cfg"
 ```
 
+### datastore.cfg létrehozása
+```bash
+pct exec 201 -- bash -c "printf 'datastore: local\n\tpath /var/lib/proxmox-backup/backups\n' > /etc/proxmox-backup/datastore.cfg"
+```
+
 ### Fájl jogosultságok javítása
 ```bash
 pct exec 201 -- bash -c "
 chown root:backup /etc/proxmox-backup/user.cfg &&
 chown root:backup /etc/proxmox-backup/acl.cfg &&
+chown root:backup /etc/proxmox-backup/datastore.cfg &&
 chmod 640 /etc/proxmox-backup/user.cfg &&
 chmod 640 /etc/proxmox-backup/acl.cfg &&
+chmod 640 /etc/proxmox-backup/datastore.cfg &&
 systemctl restart proxmox-backup
 "
 ```
 
-**KRITIKUS:** A user.cfg tulajdonosa `root:backup` kell legyen (NEM `backup:backup` és NEM `root:root`)!
+**KRITIKUS:** Minden config fájl tulajdonosa `root:backup` kell legyen!
 
 ---
 
@@ -147,9 +154,30 @@ URL: `https://10.10.40.14:8007`
 
 ```bash
 pct exec 201 -- proxmox-backup-manager datastore list
+pct exec 201 -- bash -c "ls /var/lib/proxmox-backup/backups/ct/"
 ```
 
-Ha a `/var/lib/proxmox-backup/backups` mount látható és a CT-k backup mappái ott vannak, minden rendben.
+---
+
+## 9. Proxmox storage fingerprint és jelszó frissítése
+
+Új PBS telepítés után új TLS cert generálódik — frissíteni kell a PVE storage konfigban.
+
+```bash
+# Új fingerprint lekérése
+pct exec 201 -- proxmox-backup-manager cert info | grep Fingerprint
+
+# Frissítés (pve-01-ről futtatva, cluster-wide)
+pvesh set /storage/pbs-server --fingerprint "xx:xx:..."
+pvesh set /storage/pbs-server --password 'a_root_jelszó'
+
+# Ellenőrzés mindhárom node-on
+pvesh get /nodes/pve-01/storage/pbs-server/status
+pvesh get /nodes/pve-02/storage/pbs-server/status
+pvesh get /nodes/pve-03/storage/pbs-server/status
+```
+
+**Sikeres állapot:** `active: 1` mindhárom node-on.
 
 ---
 
@@ -163,10 +191,10 @@ zfs list
 du --max-depth=2 /mnt 2>/dev/null | sort -rn | head -10
 
 # Ha /mnt alatt nagy felesleges könyvtár van:
-rm -rf /mnt/pbs-data  # háttérben fut, & jelzés ajánlott
+rm -rf /mnt/pbs-data &
 ```
 
-**Backup store helyek:**
-- `/mnt/pbs-store` — a valódi PBS store (ZFS dataset: `rpool/pbs-store`), **SOHA NE TÖRÖLD**
+**Backup store helyek pve-02-n:**
+- `/mnt/pbs-store` — a valódi PBS store (ZFS: `rpool/pbs-store`), **SOHA NE TÖRÖLD**
 - `/mnt/pbs-store-new` — ugyanaz, másik mountpoint
-- `/mnt/pbs-data` — régi/elavult store, törölhető volt
+- `/mnt/pbs-data` — régi/elavult store volt, törölhető
