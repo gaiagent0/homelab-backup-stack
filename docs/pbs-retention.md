@@ -4,19 +4,24 @@
 
 ---
 
-## Default Retention Settings
+## Default Retention Settings (PBS 4.x — prune jobs)
 
-This repo uses the following retention policy on the PBS datastore (`local`):
+> **PBS 4.x note:** datastore-level prune options were removed; retention is now configured
+> exclusively via **prune jobs**. `proxmox-backup-manager datastore update local --keep-*`
+> returns *"datastore prune settings have been replaced by prune jobs"*.
+
+This repo uses the `prune-all` prune job on the PBS datastore (`local`):
 
 | Keep parameter | Value | Effect |
 |---|---|---|
 | `keep-last` | 2 | Always keep the 2 most recent backups |
-| `keep-daily` | 7 | Keep 1 backup per day for the last 7 days |
-| `keep-weekly` | 4 | Keep 1 backup per week for the last 4 weeks |
-| `keep-monthly` | 3 | Keep 1 backup per month for the last 3 months |
-| `keep-yearly` | 0 | No yearly retention |
+| `keep-monthly` | 1 | Keep 1 monthly backup |
+| `keep-daily` / `keep-weekly` / `keep-yearly` | — | removed (minimal local footprint) |
+| schedule | `daily` | prune runs nightly |
 
-These settings provide ~2 months of recovery points while keeping the datastore at ~6–12 GB for a typical 3-node homelab.
+Because the pCloud sync uses `rclone sync --delete-after`, the **same retention is enforced
+offsite** on the next sync — there is no separate pCloud pruning step (see
+[docs/pbs-rclone-backup.md](pbs-rclone-backup.md)).
 
 ---
 
@@ -24,10 +29,10 @@ These settings provide ~2 months of recovery points while keeping the datastore 
 
 ```bash
 # Inside CT201 (PBS server):
-proxmox-backup-manager datastore show local
+proxmox-backup-manager prune-job list
 
 # Or via the PBS web UI:
-# https://<pbs-ip>:8007 → Datastore → local → Options → Prune Options
+# https://<pbs-ip>:8007 → Prune Jobs → prune-all
 ```
 
 ---
@@ -35,16 +40,22 @@ proxmox-backup-manager datastore show local
 ## Applying Retention via CLI
 
 ```bash
-# Inside CT201:
-proxmox-backup-manager datastore update local \
+# Inside CT201 — create / update the prune job (minimal: keep-last 2 + monthly 1):
+proxmox-backup-manager prune-job update prune-all \
+  --store local \
+  --schedule daily \
   --keep-last 2 \
-  --keep-daily 7 \
-  --keep-weekly 4 \
-  --keep-monthly 3 \
-  --keep-yearly 0
+  --keep-monthly 1 \
+  --delete keep-daily --delete keep-weekly --delete keep-yearly --delete keep-hourly
+
+# Run immediately (does NOT free disk — run GC after):
+proxmox-backup-manager prune-job run prune-all
+
+# Free chunk space:
+proxmox-backup-manager garbage-collection start local
 
 # Verify:
-proxmox-backup-manager datastore show local | grep -A 10 "prune"
+proxmox-backup-manager prune-job list
 ```
 
 ---
