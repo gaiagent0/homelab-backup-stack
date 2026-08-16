@@ -176,18 +176,34 @@ nem része ennek a migrálásnak.
 
 ---
 
-## 6. Ismert hiányosságok / TODO
+## 6. Hiányosságok lezárása (post-migration follow-up, 2026-08-16)
 
-- **Elmaradt hajnali mentés (2026-08-16):** a PBS (CT201) a migráció miatt **02:04–08:09** között
-  állt, így a 02:00/03:00/04:00 backup ablak **nem futott le**. A legutolsó ép mentések:
-  `101/105/106/107/204` → 2026-08-16 00:30, a többi CT → 2026-08-15 hajnal. Adatvesztés NINCS
-  (régi snapshotok épek); a következő (ma esti) ablak pótol. Szükség esetén indíts manuális
-  teljes mentést.
-- **Retention:** a live `prune-all` még `keep-last=3` (a README célértéke `keep-last=2 + keep-monthly=1`).
-  Szigorítás még nem történt meg — lásd `docs/pbs-retention.md`.
-- **`rclone sync --delete-after`:** a CT204 cron továbbra is tükröző (`--delete-after`) módban fut
-  (05:00). A skill javaslata szerint érdemes `rclone copy`-ra váltani a független 3-2-1 archívumhoz —
-  még nincs megvalósítva.
+A migráció után azonosított 3 hiányosság mindegyike kezelve:
+
+- **Gap1 — elmaradt hajnali mentés (2026-08-16):** a PBS (CT201) **02:04–08:09** között állt, a
+  02:00/03:00/04:00 ablak kimaradt. **Lezárva:** a 3 vzdump backup job
+  (`backup-61809f18-c9aa` 02:00, `backup-592fd226-fd19` 03:00, `agata-freebuff-backup` 04:00)
+  mind `enabled 1`, `storage pbs-server` (CT201, pve-03) — a kimaradás egyszeri volt, a következő
+  hajnali ablakok újra futnak. Adatvesztés nem történt (régi snapshotok épek, legfrissebb:
+  `101/105/106/107/204` → 2026-08-16 00:30, többi → 2026-08-15 hajnal).
+- **Gap2 — retention szigorítás:** a szerver oldali `prune-all` job már a cél szerint
+  `keep-last=2 + keep-monthly=1` volt. Lefuttatva: `prune-job run prune-all` (Aug-13 snapshotok
+  törölve) + `garbage-collection start local` → **0 B szemét**, `pbs-server` storage
+  `82 GiB / 948 GiB szabad (8.07%)`, dedup 4.22. **Plusz:** a 3 vzdump job `prune-backups`
+  beállítása `keep-last=3` → `keep-last=2,keep-monthly=1`-re igazítva (`pvesh set /cluster/backup/<id>
+  --prune-backups keep-last=2,keep-monthly=1`) — ez felülírta volna a szerver oldali prune-ot, így
+  most az egész lánc egységes `keep-last=2 + keep-monthly=1`.
+- **Gap3 — `rclone sync --delete-after` → `copy`:** a CT204 `/usr/local/bin/backup-to-pcloud.sh`
+  átírva `rclone sync … --delete-after` → `rclone copy …` (biztonsági mentés:
+  `backup-to-pcloud.sh.bak-20260816-071622`). A `0 5 * * *` cron változatlanul fut, de most már
+  **független 3-2-1 archívumot** másol (a pCloud-ról soha nem töröl helyi hiány miatt). Verifikálva
+  `rclone copy --dry-run` ellenőrzéssel: csak új/módosult fájlokat másol, `--delete-after` nincs.
+  (A skill-ben említett második, veszélyes `pbs-rclone-sync.timer`/`pbs-backup-sync.sh` már nem
+  létezett a CT204-en — csak az egyetlen `backup-to-pcloud.sh` cron volt.)
+
+Megjegyzés: a skill referencia-állapotában (2026-08-13) még `keep-last=3` és két párhuzamos 02:00-s
+sync szerepelt; az élő állapot (2026-08-16, pve-03) ettől eltért, a fenti lépések a valós élő
+állapotot hozták a célértékekre.
 
 ---
 
