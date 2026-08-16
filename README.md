@@ -40,16 +40,21 @@ wrote to a second folder (`pcloud:Proxmox/PBS-backup`) was **removed** to elimin
 
 ---
 
-## Current deployment (pve-02)
+## Current deployment (pve-03)
 
-| Container | Role | IP | Notes |
-|---|---|---|---|
-| **CT201** `pbs-server` | Proxmox Backup Server 4.2 | **10.10.40.14** | datastore `local` → `/var/lib/proxmox-backup/backups` (host `/mnt/pbs-store`, RW) |
-| **CT204** `rclone-sync` | rclone → pCloud | 10.10.40.204 | mounts `/mnt/pbs-store` **RO** at `/mnt/pbs-backup`; runs the nightly sync |
+> **2026-08-16:** CT201/CT204 **átköltöztetve pve-02 → pve-03**. Lásd
+> [docs/pbs-pve02-to-pve03-migration.md](https://github.com/gaiagent0/homelab-backup-stack/blob/main/docs/pbs-pve02-to-pve03-migration.md)
+> a teljes runbookért (3 Proxmox-buktató + pve-02 takarítás). pve-02 azóta üres quorum/standby node.
 
-> Reachability: CT201/CT204 live on the `10.10.40.0/24` VLAN. From a laptop on a different
-> subnet (e.g. `10.10.20.x`) SSH to them directly fails — jump via the pve-02 node
-> (`10.10.40.12`) with `pct exec 201 -- …` / `pct exec 204 -- …`.
+| Container | Role | Node | IP | Notes |
+|---|---|---|---|---|
+| **CT201** `pbs-server` | Proxmox Backup Server 4.2 | **pve-03** (10.10.40.13) | **10.10.40.14** | datastore `local` → `/var/lib/proxmox-backup/backups` (host `/mnt/pbs-store`, RW) |
+| **CT204** `rclone-sync` | rclone → pCloud | **pve-03** | 10.10.40.204 | mounts `/mnt/pbs-store` **RO** at `/mnt/pbs-backup`; runs the nightly sync (05:00) |
+
+> Reachability: CT201/CT204 live on the `10.10.40.0/24` VLAN, **on pve-03 (10.10.40.13)**. From a
+> laptop on a different subnet (e.g. `10.10.20.x`) SSH to them directly fails — jump via the pve-03
+> node (`10.10.40.13`) with `pct exec 201 -- …` / `pct exec 204 -- …`. (A `10.10.40.14` IP a CT201
+> belső IP-je, maradt változatlan a migráció során — a cluster `pbs-server` storage erre mutat.)
 
 ### Retention policy (CT201 prune job `prune-all`)
 
@@ -114,12 +119,14 @@ homelab-backup-stack/
 │   ├── pbs-rclone-backup.md  — Live rclone sync script (CT204 cron)
 │   ├── pbs-job-management.md — prune / GC job management via API
 │   ├── pbs-ct-reinstall-runbook.md — CT201/CT204 reinstall procedure
+│   ├── pbs-pve02-to-pve03-migration.md — 2026-08-16 CT201/CT204 migration pve-02->pve-03 + cleanup
 │   └── disaster-recovery.md  — Full restore procedure from pCloud
 ├── scripts/
 │   ├── setup-host-dir.sh     — Create /mnt/pbs-store, set UID 100034 ownership
 │   ├── setup-bind-mounts.sh  — pct set for CT201 (RW) and CT204 (RO)
 │   ├── setup-rclone-timer.sh — Install sync service + timer into CT204
-│   └── pbs-backup-sync.sh    — (retired template) rclone sync script — see docs/pbs-rclone-backup.md
+│   ├── pbs-backup-sync.sh    — (retired template) rclone sync script — see docs/pbs-rclone-backup.md
+│   └── pbs-pve02-to-pve03-migrate.sh — final-step migration script (node-name target, mp0 remove/re-add)
 ├── templates/
 │   ├── systemd/
 │   │   ├── pbs-rclone-sync.service

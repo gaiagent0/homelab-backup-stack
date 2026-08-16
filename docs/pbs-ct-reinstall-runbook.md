@@ -203,7 +203,9 @@ du --max-depth=2 /mnt 2>/dev/null | sort -rn | head -10
 rm -rf /mnt/pbs-data &
 ```
 
-**Backup store helyek pve-02-n:**
-- `/mnt/pbs-store` — a valódi PBS store (ZFS: `rpool/pbs-store`), **SOHA NE TÖRÖLD**
-- `/mnt/pbs-store-new` — ugyanaz, másik mountpoint
+**Backup store helyek (2026-08-16 után):** — *a PBS CT-k pve-02-ről pve-03-ra költöztek, lásd
+[docs/pbs-pve02-to-pve03-migration.md](docs/pbs-pve02-to-pve03-migration.md)*
+- pve-03 `/mnt/pbs-store` — a valódi PBS store (ZFS: `rpool/pbs-store`), **SOHA NE TÖRÖLD** ← ide költözött
+- pve-02 `/mnt/pbs-store` — volt a PBS store, **2026-08-16-án törölve** (redundáns másolat; élő adat már pve-03-on + pCloudon)
+- pve-02 `/mnt/pbs-store-new` — elárvult `rpool/pbs-store` mountpont, **2026-08-16-án törölve**
 - `/mnt/pbs-data` — régi/elavult store volt, törölhető
