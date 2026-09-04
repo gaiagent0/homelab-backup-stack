@@ -17,7 +17,7 @@
 
 ## Prerequisites
 
-- A running Proxmox VE 8.x node (pve-02 or replacement)
+- A running Proxmox VE node (2026-08-16 óta pve-03; a PBS CT201 ott fut)
 - Access to CT204 (rclone-sync) or ability to create a new LXC with rclone
 - pCloud credentials (token in `/root/.rclone.conf` — stored in CT204)
 - At least `~15 GB` free disk space for the PBS datastore restore

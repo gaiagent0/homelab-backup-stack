@@ -15,7 +15,7 @@ PVE VMs/LXCs  ──backup──►  CT201 PBS-Server           CT204 rclone-syn
                              /var/lib/proxmox-backup/   /mnt/pbs-backup/ (RO)
                                        │                       │
                                        └───── both bind-mount ──┘
-                                              /mnt/pbs-store/      ← pve-02 host dir
+                                              /mnt/pbs-store/      ← pve-03 host dir (2026-08-16 migration óta)
                                                     │
                                                     └── rclone sync --delete-after (cron 02:00)
                                                               │
@@ -76,7 +76,7 @@ This is the "monthly cleanup" — there is no separate pCloud pruning step.
 
 ## Prerequisites
 
-- Proxmox VE 8.x/9.x, two LXCs on pve-02:
+- Proxmox VE 8.x/9.x, two LXCs (2026-08-16 óta **pve-03-on**):
   - **CT201** `pbs-server` (IP **10.10.40.14**)
   - **CT204** `rclone-sync` (IP 10.10.40.204)
 - rclone configured with a `pcloud` remote (EU endpoint `eapi.pcloud.com`)
@@ -87,7 +87,7 @@ This is the "monthly cleanup" — there is no separate pCloud pruning step.
 ## Quick Start
 
 ```bash
-# On pve-02 host:
+# On pve-03 host (2026-08-16 migration óta):
 cp configs/env.example configs/env && nano configs/env
 
 bash scripts/setup-host-dir.sh          # creates /mnt/pbs-store, sets ownership
