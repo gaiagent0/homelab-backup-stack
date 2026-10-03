@@ -75,7 +75,7 @@ pct exec 299 -- bash -c "
 "
 ```
 
-Download time estimate: ~6 GB at 5 MB/s ≈ ~20 minutes. Adjust `--bwlimit` based on your connection.
+Download time estimate: **scales with the datastore size.** On 2026-10-03 the datastore was ~340 GB (pCloud: 312 GiB used of 500 GiB) → at 5–6 MB/s that is roughly **14–17 hours** (≈ 2 hours only at 50 MB/s). The old "~6 GB ≈ 20 minutes" figure referred to the early, tiny datastore. Adjust `--bwlimit` based on your connection and re-measure after the datastore grows.
 
 ### Step 4 — Verify downloaded data
 
@@ -172,4 +172,4 @@ pct destroy 299
 
 ---
 
-*Tested recovery scenario: pve-02 disk replaced, full restore from pCloud in ~45 minutes (6 GB datastore, 50 Mbps connection)*
+*Tested recovery scenario (historical): pve-02 disk replaced, full restore from pCloud in ~45 minutes — that was a 6 GB datastore on a 50 Mbps connection. With the ~340 GB datastore of 2026-10 the same procedure would take about 14–17 hours; a fresh restore test is recommended.*

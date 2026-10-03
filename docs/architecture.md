@@ -177,7 +177,7 @@ PVE VM-ek/LXC-k
 CT201 PBS → /var/lib/proxmox-backup/backups/ (= /mnt/pbs-data host-on)
     ↓ bind mount (ro)
 CT204 rclone-sync → /mnt/pbs-backup/
-    ↓ napi 02:00 systemd timer
+    ↓ napi 05:00 cron (CT204, UTC; 2026-10-03-án élőben ellenőrizve — nem systemd timer, nem 02:00)
 pCloud: Proxmox/PBS-backup/
 ```
 
