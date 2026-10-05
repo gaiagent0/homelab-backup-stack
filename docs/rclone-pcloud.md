@@ -59,7 +59,7 @@ Verify connectivity:
 
 ```bash
 rclone about pcloud:
-# Total: 500G, Used: 265G, Free: 235G
+# Total: 500G, Used: 265G, Free: 235G   (example; live 2026-10-03: Used 312 GiB, Free 188 GiB — watch the capacity, retention changes are mirrored by --delete-after)
 ```
 
 ---

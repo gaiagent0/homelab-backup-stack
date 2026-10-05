@@ -17,7 +17,7 @@ PVE VMs/LXCs  ──backup──►  CT201 PBS-Server           CT204 rclone-syn
                                        └───── both bind-mount ──┘
                                               /mnt/pbs-store/      ← pve-03 host dir (2026-08-16 migration óta)
                                                     │
-                                                    └── rclone sync --delete-after (cron 02:00)
+                                                    └── rclone sync --delete-after (cron 05:00, CT204 clock = UTC; verified live 2026-10-03)
                                                               │
                                                         pCloud EU (eapi.pcloud.com)
                                                         homelab/pbs-backups/   ← SINGLE archive (PBS mirror)
@@ -149,7 +149,7 @@ homelab-backup-stack/
 | `PBS_PBS_UID` | `100034` | host UID for CT PBS daemon (100000 + 34) |
 | `RCLONE_REMOTE` | `pcloud:homelab/pbs-backups` | **single** rclone destination |
 | `RCLONE_BWLIMIT` | `5M` | upload bandwidth cap |
-| `SYNC_TIME` | `02:00:00` | nightly sync time (cron, avoids PBS backup window) |
+| `SYNC_TIME` | `05:00:00` | nightly sync time. Live value 2026-10-03: CT204 crontab `0 5 * * *` (container clock = UTC, i.e. 07:00 CEST) — runs after the 02:00/03:00/04:00 vzdump jobs. The old default `02:00` was outdated. |
 
 ---
 
